@@ -1,6 +1,7 @@
 var request = require('request');
 var Q = require('q');
 var extend = require('util-extend');
+var crypto = require("crypto");
 
 var default_options = {
     merchantId: "13466",
@@ -91,6 +92,17 @@ this.addProduct = function (product) {
         payment = extend(payment_defaults, payment);
         return this.APIRequest(this.urls.paymentCreate, payment); 
     };
+    this.confirmSuccess = function (orderNumber, timestamp, paid, method, authCode) {
+        return this.confirmParams([orderNumber, timestamp, paid, method, this.options.merchantSecret], authCode);
+    };
+    this.confirmFailure = function (orderNumber, timestamp, authCode) {
+        return this.confirmParams([orderNumber, timestamp, this.options.merchantSecret], authCode);
+    }
+    this.confirmParams = function (array, authCode) {
+        var base = array.join('|');     
+        var hash = crypto.createHash("md5").update(base).digest("hex");
+        return hash.toUpperCase() === authCode;
+    }
     return this;
 
 }
