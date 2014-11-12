@@ -20,5 +20,10 @@
   "bugs": {
     "url": "https://github.com/theikkila/node-paytrail/issues"
   },
-  "homepage": "https://github.com/theikkila/node-paytrail"
+  "homepage": "https://github.com/theikkila/node-paytrail",
+  "dependencies": {
+    "q": "^1.1.1",
+    "request": "^2.47.0",
+    "util-extend": "^1.0.1"
+  }
 }
