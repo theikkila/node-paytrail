@@ -1,13 +1,13 @@
-var request = require('request');
-var Q = require('q');
-var extend = require('util-extend');
-var crypto = require("crypto");
+const request = require('request');
+const Promise = require('bluebird');
+const extend = require('util-extend');
+const crypto = require("crypto");
 
-var default_options = {
+const default_options = {
     merchantId: "13466",
     merchantSecret: "6pKF4jkv97zmqBJ3ZL8gUw5DfT2NMQ",
 };
-var default_urls = {
+const default_urls = {
     paymentCreate: "https://payment.paytrail.com/api-payment/create"
 }
 
@@ -23,32 +23,30 @@ module.exports = function (options, urls) {
         || !this.urls.notification) { throw new Error("Callback urls must be defined!"); };
     // Default method for creating payments
 this.APIRequest = function APIRequest (url, body) {
-    var deferred = Q.defer();
-    var r = {
-        method: 'POST',
-        uri: url,
-        auth: {
-            username: this.options.merchantId,
-            password: this.options.merchantSecret
-        },
-        headers: {
-            'User-Agent': 'node-paytrail',
-            'X-Verkkomaksut-Api-Version': 1
-        },
-        json: true,
-        body: body
+  return new Promise((resolve, reject) => {
+    const r = {
+      method: 'POST',
+      uri: url,
+      auth: {
+        username: this.options.merchantId,
+        password: this.options.merchantSecret
+      },
+      headers: {
+        'User-Agent': 'node-paytrail',
+        'X-Verkkomaksut-Api-Version': 1
+      },
+      json: true,
+      body: body
     }
-    request(r, function(error, response, body){
-        if (error) {
-            deferred.reject(error);
-            return;
-        }
-        deferred.resolve(body);
+    request(r, (error, response, body) => {
+      if (error) return reject(error);
+      return resolve(body);
     });
-    return deferred.promise;
+
+  });
 };
-this.addProduct = function (product) {
-    var product_default = {
+this.addProduct = (product) => {
+    const product_default = {
         title: "Product",
         amount: 1,
         price: 0.65,
@@ -58,11 +56,11 @@ this.addProduct = function (product) {
     };
     product = extend(product_default, product);
     this.products.push(product);
+    return this;
 }
     // sets contact information
-    this.setContact = function (required, address, optionals) {
-        data = {address:{}};
-        data = required;
+    this.setContact = (required, address, optionals) => {
+        let data = required;
         data.address = address;
         data = extend(data, optionals);
         if (!("firstName" in data)) throw new Error("firstName is required");
@@ -73,10 +71,11 @@ this.addProduct = function (product) {
         if (!("postalOffice" in data.address)) throw new Error("postalOffice is required");
         if (!("country" in data.address)) throw new Error("country is required");
         this.contact = data;
+        return this;
     }
     // creates and processes payment
     this.createPayment = function (payment) {
-        var payment_defaults = {
+        const payment_defaults = {
             orderNumber: "",
             referenceNumber: "",
             description: "",
@@ -90,7 +89,7 @@ this.addProduct = function (product) {
             }
         };
         payment = extend(payment_defaults, payment);
-        return this.APIRequest(this.urls.paymentCreate, payment); 
+        return this.APIRequest(this.urls.paymentCreate, payment);
     };
     this.confirmSuccess = function (orderNumber, timestamp, paid, method, authCode) {
         return this.confirmParams([orderNumber, timestamp, paid, method, this.options.merchantSecret], authCode);
@@ -99,7 +98,7 @@ this.addProduct = function (product) {
         return this.confirmParams([orderNumber, timestamp, this.options.merchantSecret], authCode);
     }
     this.confirmParams = function (array, authCode) {
-        var base = array.join('|');     
+        var base = array.join('|');
         var hash = crypto.createHash("md5").update(base).digest("hex");
         return hash.toUpperCase() === authCode;
     }
