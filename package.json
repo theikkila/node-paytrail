@@ -1,6 +1,6 @@
 {
   "name": "node-paytrail",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Library for interacting with paytrail API",
   "main": "index.js",
   "scripts": {
